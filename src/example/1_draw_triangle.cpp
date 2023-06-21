@@ -6,13 +6,13 @@ enum UniformVar {
 
 int main(int argv, char** args) {
     Renderer renderer(480, 320);
-    renderer.SetClearColor(Color4{0.1, 0.1, 0.1, 1});
+    renderer.SetClearColor(Color4{0.8, 0.8, 0.8, 1});
     renderer.Clear();
     renderer.SetViewport(0, 0, 480, 320);
 
     struct { Vec4 pos; Vec4 color; } vs_input[3] = {
-        {Vec4{0.1,0.1, 1, 1}, Vec4{1, 0, 0, 1}},
-        {Vec4{0.5, 0.5, 1, 1}, Vec4{0, 1, 0, 1}},
+        {Vec4{-0.5, -0.5, 1, 1}, Vec4{1, 0, 0, 1}},
+        {Vec4{0.5, -0.5, 1, 1}, Vec4{0, 1, 0, 1}},
         {Vec4{0, 0.5, 1, 1}, Vec4{0, 0, 1, 1}},
     };
 
