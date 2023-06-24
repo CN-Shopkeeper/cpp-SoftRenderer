@@ -143,11 +143,6 @@ inline Mat44 CreateScale(real x, real y, real z) {
   };
 }
 
-template <typename T>
-inline T Lerp(T a, T b, real percent) {
-  return a + (b - a) * percent;
-}
-
 
 /***********************************
  * Surface - use this to draw points

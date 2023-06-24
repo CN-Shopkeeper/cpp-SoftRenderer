@@ -53,6 +53,11 @@
         "ostream": "cpp",
         "sstream": "cpp",
         "cinttypes": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "optional": "cpp",
+        "codecvt": "cpp",
+        "fstream": "cpp",
+        "iomanip": "cpp",
+        "filesystem": "cpp"
     },
 }
