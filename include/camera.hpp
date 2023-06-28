@@ -26,14 +26,18 @@ class Frustum {
         // clang-format on
 #else
         // Code to be executed when the "cpu" feature is not enabled
+        // Since glFrustum() accepts only positive values of near and far
+        // distances, we need to negate them during the construction of
+        // GL_PROJECTION matrix.
+        // 所以n和f都要预先加上负号，因此矩阵和我笔记的不太同
         float tan = std::tan(fov * 0.5);
         auto sign = near > 0 ? 1 : (near == 0 ? 0 : -1);
         // clang-format off
         mat = Mat44(std::initializer_list<real>{
             sign / (aspect * tan),          0,                          0,                             0,
                                 0, sign / tan,                          0,                             0,
-                                0,          0,(near + far) / (near - far), 2 * near * far / (far - near), 
-                                0,          0,                          1,                             0});
+                                0,          0,(near + far) / (near - far), -2 * near * far / (far - near), 
+                                0,          0,                          -1,                             0});
         // clang-format on
 
 #endif
