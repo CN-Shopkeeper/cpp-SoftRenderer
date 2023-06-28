@@ -20,7 +20,7 @@ class Frustum {
         // clang-format off
         mat = Mat44(std::initializer_list<real>{
             a,          0,          0, 0, 
-            0, aspect / a,          0, 0,
+            0, aspect * a,          0, 0,
             0,          0,        1.0, 0,
             0,          0, -1.0f/near, 0});
         // clang-format on
