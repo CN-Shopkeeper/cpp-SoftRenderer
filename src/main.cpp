@@ -181,6 +181,31 @@ class RedBirdApp : public App {
         rotation_ += 1.0f;
         SwapBuffer(renderer_->GetSurface());
     }
+
+    void OnKeyDown(const SDL_KeyboardEvent& e) override {
+        auto& camera = renderer_->GetCamera();
+        if (SDLK_w == e.keysym.sym) {
+            camera.MoveOffset(Vec3{0.0, 0.0, -0.01});
+        }
+        if (SDLK_a == e.keysym.sym) {
+            camera.MoveOffset(Vec3{-0.01, 0.0, 0.0});
+        }
+        if (SDLK_s == e.keysym.sym) {
+            camera.MoveOffset(Vec3{0.0, 0.0, 0.01});
+        }
+        if (SDLK_d == e.keysym.sym) {
+            camera.MoveOffset(Vec3{0.01, 0.0, 0.0});
+        }
+        if (SDLK_q == e.keysym.sym) {
+            camera.MoveOffset(Vec3{0.0, 0.01, 0.0});
+        }
+        if (SDLK_e == e.keysym.sym) {
+            camera.MoveOffset(Vec3{0.0, -0.01, 0.0});
+        }
+        if (SDLK_t == e.keysym.sym) {
+            renderer_->ToggleFramework();
+        }
+    }
 };
 
 int main(int argv, char** args) {

@@ -46,6 +46,7 @@ class IRenderer {
     virtual void EnableFramework() = 0;
     virtual void DisableFramework() = 0;
     virtual SDL_Surface *GetSurface() = 0;
+    virtual void ToggleFramework() = 0;
 };
 
 // Bresenham对象，用于绘制线段，可用cohen sutherland算法切割
@@ -252,8 +253,10 @@ void RasterizeLine(Line &line, PixelShading &shading, Uniforms &uniforms,
             float z = 1.0 / rhw;
 
             if (depth_attachment.Get(x, y) < z) {
-                auto color =
-                    shading(vertex.attributes, uniforms, texture_storage);
+                auto attr = vertex.attributes;
+                AttributesForeach(attr,
+                                  [=](float value) { return value / rhw; });
+                auto color = shading(attr, uniforms, texture_storage);
                 color_attachment.Set(x, y, color);
                 depth_attachment.Set(x, y, z);
             }
