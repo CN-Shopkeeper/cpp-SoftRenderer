@@ -49,8 +49,8 @@ class GpuRenderer : public IRenderer {
             // perspective divide
             v.position.x /= v.position.w;
             v.position.y /= v.position.w;
-
             v.position.w = 1.0;
+
             // Viewport transform
             v.position.x =
                 (v.position.x + 1.0) * 0.5 * (viewport_.w - 1.0) + viewport_.x;
@@ -77,8 +77,8 @@ class GpuRenderer : public IRenderer {
             for (int i = 0; i < 3; i++) {
                 auto v1 = vertices[i];
                 auto v2 = vertices[(i + 1) % 3];
-                v1.position.z = 1.0 / v1.position.z;
-                v2.position.z = 1.0 / v2.position.z;
+                VertexRhwInit(v1);
+                VertexRhwInit(v2);
                 Line line = Line{v1, v2};
                 RasterizeLine(line, shader_.pixelShading, uniforms_,
                               textureStorage, colorAttachment_,
@@ -181,6 +181,8 @@ class GpuRenderer : public IRenderer {
     SDL_Surface *GetSurface() override {
         return colorAttachment_.ConvertToSurface();
     }
+
+    void ToggleFramework() override { enableFramework_ = !enableFramework_; }
 };
 
 Attributes GetCorrectedAttribute(float z, std::vector<Vertex> vertices,

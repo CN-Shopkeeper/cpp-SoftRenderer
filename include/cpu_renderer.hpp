@@ -153,8 +153,8 @@ class CpuRenderer : public IRenderer {
             for (int i = 0; i < 3; i++) {
                 auto v1 = vertices[i];
                 auto v2 = vertices[(i + 1) % 3];
-                v1.position.z = 1.0 / v1.position.z;
-                v2.position.z = 1.0 / v2.position.z;
+                VertexRhwInit(v1);
+                VertexRhwInit(v2);
                 Line line = Line{v1, v2};
                 RasterizeLine(line, shader_.pixelShading, uniforms_,
                               textureStorage, colorAttachment_,
@@ -264,4 +264,6 @@ class CpuRenderer : public IRenderer {
     SDL_Surface *GetSurface() override {
         return colorAttachment_.ConvertToSurface();
     }
+
+    void ToggleFramework() override { enableFramework_ = !enableFramework_; }
 };
