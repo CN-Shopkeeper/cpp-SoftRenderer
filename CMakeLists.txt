@@ -30,6 +30,7 @@ include(cmake/FindSDL2.cmake)
 
 # some useful utiilities
 include(cmake/copydll.cmake)
+include(cmake/copyresources.cmake)
 include(cmake/cppcheck.cmake)
 AttachCppCheck()
 
@@ -39,3 +40,4 @@ target_link_libraries(${PROJECT_NAME} PUBLIC SDL2 PUBLIC SDL2_image)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 CopyDLL(${PROJECT_NAME})
+CopyResources(${PROJECT_NAME})

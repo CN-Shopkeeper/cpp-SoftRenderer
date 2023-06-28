@@ -89,9 +89,9 @@ class RedBirdApp : public App {
         textureStorage_ = TextureStorage();
 
         // data prepare, from OBJ model
-        std::string MODEL_ROOT_DIR = "./resources/Red";
+        std::string MODEL_ROOT_DIR = "./resources/Son Goku";
         auto modelResult = model::LoadFromFile(
-            std::filesystem::path{MODEL_ROOT_DIR}.append("Red.obj").string(),
+            std::filesystem::path{MODEL_ROOT_DIR}.append("Goku.obj").string(),
             model::PreOperation::None);
         if (!modelResult.has_value()) {
             SDL_Log("load model from %s failed!", MODEL_ROOT_DIR.c_str());
