@@ -10,11 +10,22 @@ const size_t MAX_ATTRIBUTES_NUM = 4;
 
 class Attributes {
    public:
-    //    使用map可能会有性能问题
-    std::map<unsigned int, float> varyingFloat;
-    std::map<unsigned int, Vec2> varyingVec2;
-    std::map<unsigned int, Vec3> varyingVec3;
-    std::map<unsigned int, Vec4> varyingVec4;
+    //    使用map可能会有性能问题，
+    // 使用map，framework模式fps=3，非framework模式fps=1
+    // std::map<unsigned int, float> varyingFloat;
+    // std::map<unsigned int, Vec2> varyingVec2;
+    // std::map<unsigned int, Vec3> varyingVec3;
+    // std::map<unsigned int, Vec4> varyingVec4;
+    std::array<float, MAX_ATTRIBUTES_NUM> varyingFloat;
+    std::array<Vec2, MAX_ATTRIBUTES_NUM> varyingVec2;
+    std::array<Vec3, MAX_ATTRIBUTES_NUM> varyingVec3;
+    std::array<Vec4, MAX_ATTRIBUTES_NUM> varyingVec4;
+
+    Attributes()
+        : varyingFloat(std::array<float, MAX_ATTRIBUTES_NUM>()),
+          varyingVec2(std::array<Vec2, MAX_ATTRIBUTES_NUM>()),
+          varyingVec3(std::array<Vec3, MAX_ATTRIBUTES_NUM>()),
+          varyingVec4(std::array<Vec4, MAX_ATTRIBUTES_NUM>()) {}
 };
 
 class Uniforms {
@@ -73,39 +84,96 @@ Attributes InterpAttributes(Attributes& attr1, Attributes& attr2,
                             std::function<float(float, float, float)> f,
                             float t) {
     Attributes attributes = Attributes();
-    for (const auto& [key, value] : attr1.varyingFloat) {
-        attributes.varyingFloat[key] = f(value, attr2.varyingFloat[key], t);
+    // for (const auto& [key, value] : attr1.varyingFloat) {
+    //     attributes.varyingFloat[key] = f(value, attr2.varyingFloat[key], t);
+    // }
+    // for (const auto& [key, v1] : attr1.varyingVec2) {
+    //     auto v2 = attr2.varyingVec2[key];
+    //     attributes.varyingVec2[key] = Vec2{f(v1.x, v2.x, t), f(v1.y, v2.y,
+    //     t)};
+    // }
+    // for (const auto& [key, v1] : attr1.varyingVec3) {
+    //     auto v2 = attr2.varyingVec3[key];
+    //     attributes.varyingVec3[key] =
+    //         Vec3{f(v1.x, v2.x, t), f(v1.y, v2.y, t), f(v1.z, v2.z, t)};
+    // }
+    // for (const auto& [key, v1] : attr1.varyingVec4) {
+    //     auto v2 = attr2.varyingVec4[key];
+    //     attributes.varyingVec4[key] = Vec4{f(v1.x, v2.x, t), f(v1.y, v2.y,
+    //     t),
+    //                                        f(v1.z, v2.z, t), f(v1.w, v2.w,
+    //                                        t)};
+    // }
+
+    // varyingFloat
+    for (int index = 0; index < MAX_ATTRIBUTES_NUM; index++) {
+        attributes.varyingFloat[index] =
+            f(attr1.varyingFloat[index], attr2.varyingFloat[index], t);
     }
-    for (const auto& [key, v1] : attr1.varyingVec2) {
-        auto v2 = attr2.varyingVec2[key];
-        attributes.varyingVec2[key] = Vec2{f(v1.x, v2.x, t), f(v1.y, v2.y, t)};
+
+    // varyingVec2
+    for (int index = 0; index < MAX_ATTRIBUTES_NUM; index++) {
+        auto v1 = attr1.varyingVec2[index];
+        auto v2 = attr2.varyingVec2[index];
+        attributes.varyingVec2[index] =
+            Vec2{f(v1.x, v2.x, t), f(v1.y, v2.y, t)};
     }
-    for (const auto& [key, v1] : attr1.varyingVec3) {
-        auto v2 = attr2.varyingVec3[key];
-        attributes.varyingVec3[key] =
+
+    // varyingVec3
+    for (int index = 0; index < MAX_ATTRIBUTES_NUM; index++) {
+        auto v1 = attr1.varyingVec3[index];
+        auto v2 = attr2.varyingVec3[index];
+        attributes.varyingVec3[index] =
             Vec3{f(v1.x, v2.x, t), f(v1.y, v2.y, t), f(v1.z, v2.z, t)};
     }
-    for (const auto& [key, v1] : attr1.varyingVec4) {
-        auto v2 = attr2.varyingVec4[key];
-        attributes.varyingVec4[key] = Vec4{f(v1.x, v2.x, t), f(v1.y, v2.y, t),
-                                           f(v1.z, v2.z, t), f(v1.w, v2.w, t)};
+
+    // varyingVec4
+    for (int index = 0; index < MAX_ATTRIBUTES_NUM; index++) {
+        auto v1 = attr1.varyingVec4[index];
+        auto v2 = attr2.varyingVec4[index];
+        attributes.varyingVec4[index] =
+            Vec4{f(v1.x, v2.x, t), f(v1.y, v2.y, t), f(v1.z, v2.z, t),
+                 f(v1.w, v2.w, t)};
     }
     return attributes;
 }
 
 void AttributesForeach(Attributes& attr, std::function<float(float)> f) {
-    for (const auto& [key, value] : attr.varyingFloat) {
-        attr.varyingFloat[key] = f(value);
+    // for (const auto& [key, value] : attr.varyingFloat) {
+    //     attr.varyingFloat[key] = f(value);
+    // }
+    // for (const auto& [key, value] : attr.varyingVec2) {
+    //     attr.varyingVec2[key] = Vec2{f(value.x), f(value.y)};
+    // }
+    // for (const auto& [key, value] : attr.varyingVec3) {
+    //     attr.varyingVec3[key] = Vec3{f(value.x), f(value.y), f(value.z)};
+    // }
+    // for (const auto& [key, value] : attr.varyingVec4) {
+    //     attr.varyingVec4[key] =
+    //         Vec4{f(value.x), f(value.y), f(value.z), f(value.w)};
+    // }
+
+    // varyingFloat
+    for (int index = 0; index < MAX_ATTRIBUTES_NUM; index++) {
+        attr.varyingFloat[index] = f(attr.varyingFloat[index]);
     }
-    for (const auto& [key, value] : attr.varyingVec2) {
-        attr.varyingVec2[key] = Vec2{f(value.x), f(value.y)};
+
+    // varyingVec2
+    for (int index = 0; index < MAX_ATTRIBUTES_NUM; index++) {
+        auto v = attr.varyingVec2[index];
+        attr.varyingVec2[index] = Vec2{f(v.x), f(v.y)};
     }
-    for (const auto& [key, value] : attr.varyingVec3) {
-        attr.varyingVec3[key] = Vec3{f(value.x), f(value.y), f(value.z)};
+
+    // varyingVec3
+    for (int index = 0; index < MAX_ATTRIBUTES_NUM; index++) {
+        auto v = attr.varyingVec3[index];
+        attr.varyingVec3[index] = Vec3{f(v.x), f(v.y), f(v.z)};
     }
-    for (const auto& [key, value] : attr.varyingVec4) {
-        attr.varyingVec4[key] =
-            Vec4{f(value.x), f(value.y), f(value.z), f(value.w)};
+
+    // varyingVec4
+    for (int index = 0; index < MAX_ATTRIBUTES_NUM; index++) {
+        auto v = attr.varyingVec4[index];
+        attr.varyingVec4[index] = Vec4{f(v.x), f(v.y), f(v.z), f(v.w)};
     }
 }
 
