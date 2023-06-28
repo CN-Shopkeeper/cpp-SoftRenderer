@@ -39,7 +39,7 @@ class Texture {
     uint32_t Height() { return surface_->h; }
 
     Color4 GetPixel(int x, int y) const {
-        const Uint32 *color = getPixel(x, y);
+        const Uint32 *color = getPixel(x, surface_->h - y - 1);
         Uint8 r, g, b, a;
         SDL_GetRGBA(*color, surface_->format, &r, &g, &b, &a);
         return Color4{r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};

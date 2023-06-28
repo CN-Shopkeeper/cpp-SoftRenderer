@@ -111,6 +111,8 @@ class Material {
 
     MtlTextureMaps textureMaps;
 
+    Material() : Material(std::string("")) {}
+
     Material(std::string name)
         : name(name),
           ambient(std::nullopt),
@@ -240,8 +242,8 @@ template <typename T>
 inline std::optional<T> parseAsT(TokenType &token, TokenRequester &requester) {
     token = requester.Request();
     if (token.type == TokenType::Type::Token) {
-        std::string num = ::atof(num.c_str());
-        return (T)ret;
+        auto num = ::atof(token.str.c_str());
+        return (T)num;
     } else {
         return std::nullopt;
     }
@@ -256,136 +258,9 @@ std::vector<std::string> split(std::string str, std::string delimiter) {
         ret.push_back(token);
         str.erase(0, pos + delimiter.length());
     }
+    ret.push_back(str);
     return ret;
 }
-
-class ObjParser {
-   public:
-    SceneData scene;
-    std::filesystem::path &dirpath;
-    TokenRequester &tokenRequester;
-
-    ObjParser(std::filesystem::path &dirpath, TokenRequester &tokenRequester)
-        : dirpath(dirpath),
-          tokenRequester(tokenRequester),
-          scene(SceneData()) {}
-
-    void parse() {
-        auto token = tokenRequester.Request();
-        bool parseFinish = false;
-        while (!parseFinish) {
-            switch (token.type) {
-                case TokenType::Type::Token:
-                    if (token.str == "#") {
-                        IgnoreUntil(token, tokenRequester);
-                    } else if (token.str == "g" || token.str == "o") {
-                        auto nameOpt = ParseAsString(token, tokenRequester);
-                        if (nameOpt.has_value()) {
-                            scene.models.push_back(Model{
-                                std::vector<Face>{}, nameOpt.value(),
-                                scene.materials.empty()
-                                    ? std::optional<uint32_t>(std::nullopt)
-                                    : std::optional<uint32_t>(
-                                          scene.materials.size() - 1),
-                                std::optional<std::string>(std::nullopt), 0
-
-                            });
-                        }
-                    } else if (token.str == "v") {
-                        auto v3Opt = parseAsVector<3>(token, tokenRequester);
-                        if (v3Opt.has_value()) {
-                            scene.vertices.push_back(v3Opt.value());
-                        }
-                    } else if (token.str == "vt") {
-                        auto v2Opt = parseAsVector<2>(token, tokenRequester);
-                        if (v2Opt.has_value()) {
-                            scene.texcoords.push_back(v2Opt.value());
-                        }
-                    } else if (token.str == "vn") {
-                        auto v3Opt = parseAsVector<3>(token, tokenRequester);
-                        if (v3Opt.has_value()) {
-                            scene.normals.push_back(v3Opt.value());
-                        }
-                    } else if (token.str == "f") {
-                        token = tokenRequester.Request();
-                        std::vector<Vertex> vertices;
-                        bool finish = false;
-                        while (!finish) {
-                            if (token.type == TokenType::Type::Token) {
-                                auto indices = split(token.str, "/");
-                                if (indices.size() == 3) {
-                                    uint32_t vertex =
-                                        ::atoi(indices[0].c_str()) - 1;
-                                    std::optional<uint32_t> texcoord =
-                                        indices[1].empty()
-                                            ? std::optional<uint32_t>(
-                                                  std::nullopt)
-                                            : std::optional<uint32_t>(
-                                                  ::atoi(indices[1].c_str()) -
-                                                  1);
-                                    std::optional<uint32_t> normal =
-                                        indices[2].empty()
-                                            ? std::optional<uint32_t>(
-                                                  std::nullopt)
-                                            : std::optional<uint32_t>(
-                                                  ::atoi(indices[2].c_str()) -
-                                                  1);
-                                    vertices.push_back(
-                                        Vertex{vertex, normal, texcoord});
-                                }
-                            } else {
-                                // 吃掉换行
-                                finish = true;
-                            }
-                            token = tokenRequester.Request();
-                        }
-                        scene.models.back().faces.push_back(Face{vertices});
-                    } else if (token.str == "mtllib") {
-                        token = tokenRequester.Request();
-                        if (token.type == TokenType::Type::Token) {
-                            auto parentPath = dirpath.parent_path();
-                            auto filepath = parentPath.append(token.str);
-                            auto fileContentOpt =
-                                FileContent::fromFile(filepath);
-                            if (fileContentOpt.has_value()) {
-                                auto mtllibTokenRequester =
-                                    TokenRequester::New(fileContentOpt.value());
-                                if (mtllibTokenRequester.has_value()) {
-                                    auto mtlibParser = MtllibParser(
-                                        mtllibTokenRequester.value());
-                                    scene.materials.push_back(
-                                        mtlibParser.parse());
-                                }
-                            }
-                            token = tokenRequester.Request();
-                        }
-                    } else if (token.str == "usemtl") {
-                        auto nameOpt = ParseAsString(token, tokenRequester);
-                        if (nameOpt.has_value()) {
-                            scene.models.back().material = nameOpt.value();
-                        }
-                    } else if (token.str == "s") {
-                        auto u8Opt = parseAsT<uint8_t>(token, tokenRequester);
-                        if (u8Opt.has_value()) {
-                            scene.models.back().smoothShade = u8Opt.value();
-                        }
-                    } else {
-                        // 尝试跳到下一行
-                        IgnoreUntil(token, tokenRequester);
-                    }
-                    break;
-                case TokenType::Type::Eof:
-                    parseFinish = true;
-                    break;
-                case TokenType::Type::Nextline:
-                    token = tokenRequester.Request();
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-};
 
 class MtllibParser {
    public:
@@ -521,6 +396,134 @@ class MtllibParser {
             }
         }
         return mtllib;
+    }
+};
+
+class ObjParser {
+   public:
+    SceneData scene;
+    std::filesystem::path &dirpath;
+    TokenRequester &tokenRequester;
+
+    ObjParser(std::filesystem::path &dirpath, TokenRequester &tokenRequester)
+        : dirpath(dirpath),
+          tokenRequester(tokenRequester),
+          scene(SceneData()) {}
+
+    void parse() {
+        auto token = tokenRequester.Request();
+        bool parseFinish = false;
+        while (!parseFinish) {
+            switch (token.type) {
+                case TokenType::Type::Token:
+                    if (token.str == "#") {
+                        IgnoreUntil(token, tokenRequester);
+                    } else if (token.str == "g" || token.str == "o") {
+                        auto nameOpt = ParseAsString(token, tokenRequester);
+                        if (nameOpt.has_value()) {
+                            scene.models.push_back(Model{
+                                std::vector<Face>{}, nameOpt.value(),
+                                scene.materials.empty()
+                                    ? std::optional<uint32_t>(std::nullopt)
+                                    : std::optional<uint32_t>(
+                                          scene.materials.size() - 1),
+                                std::optional<std::string>(std::nullopt), 0
+
+                            });
+                        }
+                    } else if (token.str == "v") {
+                        auto v3Opt = parseAsVector<3>(token, tokenRequester);
+                        if (v3Opt.has_value()) {
+                            scene.vertices.push_back(v3Opt.value());
+                        }
+                    } else if (token.str == "vt") {
+                        auto v2Opt = parseAsVector<2>(token, tokenRequester);
+                        if (v2Opt.has_value()) {
+                            scene.texcoords.push_back(v2Opt.value());
+                        }
+                    } else if (token.str == "vn") {
+                        auto v3Opt = parseAsVector<3>(token, tokenRequester);
+                        if (v3Opt.has_value()) {
+                            scene.normals.push_back(v3Opt.value());
+                        }
+                    } else if (token.str == "f") {
+                        token = tokenRequester.Request();
+                        std::vector<Vertex> vertices;
+                        bool finish = false;
+                        while (!finish) {
+                            if (token.type == TokenType::Type::Token) {
+                                auto indices = split(token.str, "/");
+                                if (indices.size() == 3) {
+                                    uint32_t vertex =
+                                        ::atoi(indices[0].c_str()) - 1;
+                                    std::optional<uint32_t> texcoord =
+                                        indices[1].empty()
+                                            ? std::optional<uint32_t>(
+                                                  std::nullopt)
+                                            : std::optional<uint32_t>(
+                                                  ::atoi(indices[1].c_str()) -
+                                                  1);
+                                    std::optional<uint32_t> normal =
+                                        indices[2].empty()
+                                            ? std::optional<uint32_t>(
+                                                  std::nullopt)
+                                            : std::optional<uint32_t>(
+                                                  ::atoi(indices[2].c_str()) -
+                                                  1);
+                                    vertices.push_back(
+                                        Vertex{vertex, normal, texcoord});
+                                }
+                            } else {
+                                // 吃掉换行
+                                finish = true;
+                            }
+                            token = tokenRequester.Request();
+                        }
+                        scene.models.back().faces.push_back(Face{vertices});
+                    } else if (token.str == "mtllib") {
+                        token = tokenRequester.Request();
+                        if (token.type == TokenType::Type::Token) {
+                            auto parentPath = dirpath.parent_path();
+                            auto filepath = parentPath.append(token.str);
+                            auto fileContentOpt =
+                                FileContent::fromFile(filepath);
+                            if (fileContentOpt.has_value()) {
+                                auto mtllibTokenRequester =
+                                    TokenRequester::New(fileContentOpt.value());
+                                if (mtllibTokenRequester.has_value()) {
+                                    auto mtlibParser = MtllibParser(
+                                        mtllibTokenRequester.value());
+                                    scene.materials.push_back(
+                                        mtlibParser.parse());
+                                }
+                            }
+                            token = tokenRequester.Request();
+                        }
+                    } else if (token.str == "usemtl") {
+                        auto nameOpt = ParseAsString(token, tokenRequester);
+                        if (nameOpt.has_value()) {
+                            scene.models.back().material = nameOpt.value();
+                        }
+                    } else if (token.str == "s") {
+                        auto u8Opt = parseAsT<uint8_t>(token, tokenRequester);
+                        if (u8Opt.has_value()) {
+                            scene.models.back().smoothShade = u8Opt.value();
+                        }
+                    } else {
+                        // 尝试跳到下一行
+                        IgnoreUntil(token, tokenRequester);
+                    }
+                    break;
+                case TokenType::Type::Eof:
+                    parseFinish = true;
+                    break;
+                case TokenType::Type::Nextline:
+                    token = tokenRequester.Request();
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 };
 

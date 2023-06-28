@@ -95,7 +95,7 @@ Attributes InterpAttributes(Attributes& attr1, Attributes& attr2,
 
 void AttributesForeach(Attributes& attr, std::function<float(float)> f) {
     for (const auto& [key, value] : attr.varyingFloat) {
-        attr.varyingFloat[key] = f(attr.varyingFloat[key]);
+        attr.varyingFloat[key] = f(value);
     }
     for (const auto& [key, value] : attr.varyingVec2) {
         attr.varyingVec2[key] = Vec2{f(value.x), f(value.y)};
@@ -132,11 +132,11 @@ class Shader {
 
     Vertex CallVertexChanging(Vertex& vertex, Uniforms& uniforms,
                               TextureStorage& texture_storage) {
-        vertexChanging(vertex, uniforms, texture_storage);
+        return vertexChanging(vertex, uniforms, texture_storage);
     }
 
     Vec4 CallPixelShading(Attributes& attributes, Uniforms& uniforms,
                           TextureStorage& texture_storage) {
-        pixelShading(attributes, uniforms, texture_storage);
+        return pixelShading(attributes, uniforms, texture_storage);
     }
 };

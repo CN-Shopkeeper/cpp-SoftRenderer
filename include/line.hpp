@@ -7,15 +7,16 @@ class Line {
         float dx = std::abs(end.position.x - start.position.x);
         float dy = std::abs(end.position.y - start.position.y);
         float t = dx >= dy ? 1.0 / std::abs(end.position.x - start.position.x)
-                           : std::abs(end.position.y - start.position.y);
-        step = Vertex{(end.position - start.position) * t,
-                      InterpAttributes(
-                          start.attributes, end.attributes,
-                          [](float value1, float value2, float t) {
-                              return (value2 - value1) * t;
-                          },
-                          t)};
-        return step;
+                           : 1.0 / std::abs(end.position.y - start.position.y);
+        // 这里不能返回this->step
+        auto step_ = Vertex{(end.position - start.position) * t,
+                            InterpAttributes(
+                                start.attributes, end.attributes,
+                                [](float value1, float value2, float t) {
+                                    return (value2 - value1) * t;
+                                },
+                                t)};
+        return step_;
     }
 
    public:

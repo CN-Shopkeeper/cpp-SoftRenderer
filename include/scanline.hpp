@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <optional>
 #include <tuple>
 
@@ -24,8 +25,9 @@ class Trapezoid {
     Trapezoid(float top, float bottom, Edge left, Edge right)
         : top(top), bottom(bottom), left(left), right(right) {}
 
-    std::tuple<std::optional<Trapezoid>, std::optional<Trapezoid>> FromTriangle(
-        Vertex (&vertices)[3]) {
+    static std::tuple<std::optional<Trapezoid>, std::optional<Trapezoid>>
+    FromTriangle(std::vector<Vertex> vertices) {
+        assert(vertices.size() == 3);
         std::sort(std::begin(vertices), std::end(vertices),
                   [](const Vertex& left, const Vertex& right) {
                       return left.position.y < right.position.y;
@@ -91,7 +93,7 @@ class Scanline {
     float width;
 
     // 从Trapezoid中获取扫描线
-    Scanline FromTrapezoid(Trapezoid& trap, float init_y) {
+    static Scanline FromTrapezoid(Trapezoid& trap, float init_y) {
         auto t1 = (init_y - trap.left.v1.position.y) /
                   (trap.left.v2.position.y - trap.left.v1.position.y);
         auto t2 = (init_y - trap.right.v1.position.y) /
@@ -109,10 +111,62 @@ class Scanline {
             },
             rh_width);
         return Scanline(vertex_left, Vertex{position_step, attribute_step},
-                        width, init_y);
+                        init_y, width);
     }
 
    private:
     Scanline(Vertex vertex, Vertex step, float y, float width)
         : vertex(vertex), step(step), y(y), width(width) {}
 };
+
+Vertex NearPlaneClipLine(Vertex& out, Vertex& inner, float nearPlaneZ) {
+    auto proportion =
+        (nearPlaneZ - inner.position.z) / (out.position.z - inner.position.z);
+    auto position =
+        proportion * (out.position - inner.position) + inner.position;
+    auto arrtibute = InterpAttributes(inner.attributes, out.attributes,
+                                      Lerp<float>, proportion);
+    return Vertex{position, arrtibute};
+}
+
+std::tuple<std::array<Vertex, 3>, std::optional<std::array<Vertex, 3>>>
+NearPlaneClip(std::vector<Vertex>& vertices, float near) {
+    near = -near;
+    if (vertices[0].position.z > near) {
+        if (vertices[1].position.z > near) {
+            auto newVertex0 = NearPlaneClipLine(vertices[0], vertices[2], near);
+            auto newVertex1 = NearPlaneClipLine(vertices[1], vertices[2], near);
+            return {std::array<Vertex, 3>{newVertex0, newVertex1, vertices[2]},
+                    std::nullopt};
+        } else if (vertices[2].position.z > near) {
+            auto newVertex0 = NearPlaneClipLine(vertices[0], vertices[1], near);
+            auto newVertex2 = NearPlaneClipLine(vertices[2], vertices[1], near);
+            return {std::array<Vertex, 3>{newVertex0, vertices[1], newVertex2},
+                    std::nullopt};
+        } else {
+            auto newVertex1 = NearPlaneClipLine(vertices[0], vertices[1], near);
+            auto newVertex2 = NearPlaneClipLine(vertices[0], vertices[2], near);
+            return {
+                std::array<Vertex, 3>{vertices[1], newVertex2, newVertex1},
+                std::array<Vertex, 3>{vertices[1], vertices[2], newVertex2}};
+        }
+    } else if (vertices[1].position.z > near) {
+        if (vertices[2].position.z > near) {
+            auto newVertex1 = NearPlaneClipLine(vertices[1], vertices[0], near);
+            auto newVertex2 = NearPlaneClipLine(vertices[2], vertices[0], near);
+            return {std::array<Vertex, 3>{vertices[0], newVertex1, newVertex2},
+                    std::nullopt};
+        } else {
+            auto newVertex1 = NearPlaneClipLine(vertices[2], vertices[1], near);
+            auto newVertex2 = NearPlaneClipLine(vertices[0], vertices[1], near);
+            return {
+                std::array<Vertex, 3>{vertices[0], newVertex2, newVertex1},
+                std::array<Vertex, 3>{vertices[0], newVertex1, vertices[2]}};
+        }
+    } else {
+        auto newVertex1 = NearPlaneClipLine(vertices[2], vertices[0], near);
+        auto newVertex2 = NearPlaneClipLine(vertices[2], vertices[1], near);
+        return {std::array<Vertex, 3>{vertices[0], newVertex2, newVertex1},
+                std::array<Vertex, 3>{vertices[0], vertices[1], newVertex2}};
+    }
+}

@@ -13,8 +13,8 @@ class Viewport {
    public:
     int x;
     int y;
-    int w;
-    int h;
+    uint32_t w;
+    uint32_t h;
 };
 
 enum FaceCull { Front, Back, None };
@@ -27,24 +27,25 @@ class IRenderer {
     static void Init() { IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG); }
 
     static void Quit() { IMG_Quit(); }
-    virtual void Clear(Vec4 color) = 0;
+    virtual void Clear(Vec4 &color) = 0;
     virtual void ClearDepth() = 0;
     virtual uint32_t GetCanvaWidth() = 0;
     virtual uint32_t GetCanvaHeight() = 0;
-    virtual void DrawTriangle(Mat44 model, std::vector<Vertex> vertices,
+    virtual void DrawTriangle(Mat44 &model, std::vector<Vertex> &vertices,
                               TextureStorage &texture_storage) = 0;
-    virtual std::vector<uint8_t> GerRenderedImage() = 0;
-    virtual Shader GetShader() = 0;
-    virtual Uniforms GetUniforms() = 0;
-    virtual Camera GetCamera() = 0;
+    virtual std::vector<uint8_t> GetRenderedImage() = 0;
+    virtual Shader &GetShader() = 0;
+    virtual Uniforms &GetUniforms() = 0;
+    virtual Camera &GetCamera() = 0;
     virtual void SetCamera(Camera Camera) = 0;
     // 以及其他的方法
-    virtual void SetFrontFace(FrontFace front_face);
-    virtual FrontFace GetFrontFace();
-    virtual void SetFaceCull(FaceCull face_cull);
-    virtual FaceCull GetFaceCull();
-    virtual void EnableFramework();
-    virtual void DisableFramework();
+    virtual void SetFrontFace(FrontFace front_face) = 0;
+    virtual FrontFace &GetFrontFace() = 0;
+    virtual void SetFaceCull(FaceCull face_cull) = 0;
+    virtual FaceCull &GetFaceCull() = 0;
+    virtual void EnableFramework() = 0;
+    virtual void DisableFramework() = 0;
+    virtual SDL_Surface *GetSurface() = 0;
 };
 
 // Bresenham对象，用于绘制线段，可用cohen sutherland算法切割
@@ -203,10 +204,11 @@ std::optional<std::tuple<Vec2, Vec2>> CohenSutherland::CohenSutherlandLineClip(
 Vec4 TextureSample(Texture &texture, Vec2 &texcoord) {
     uint32_t x = texcoord.x * (texture.Width() - 1);
     uint32_t y = texcoord.y * (texture.Height() - 1);
+    auto res = texture.GetPixel(x, y);
     return texture.GetPixel(x, y);
 }
 
-bool ShouldCull(Vec3 (&positions)[3], Vec3 &view_dir, FrontFace face,
+bool ShouldCull(std::vector<Vec3> &positions, Vec3 &view_dir, FrontFace face,
                 FaceCull cull) {
     auto norm = Cross(positions[1] - positions[0], positions[2] - positions[1]);
     bool is_front_face;
@@ -250,8 +252,6 @@ void RasterizeLine(Line &line, PixelShading &shading, Uniforms &uniforms,
             float z = 1.0 / rhw;
 
             if (depth_attachment.Get(x, y) < z) {
-                auto attr = vertex.attributes;
-                AttributesForeach(attr, [=](float value) { return value * z; });
                 auto color =
                     shading(vertex.attributes, uniforms, texture_storage);
                 color_attachment.Set(x, y, color);

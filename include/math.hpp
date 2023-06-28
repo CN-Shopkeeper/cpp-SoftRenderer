@@ -2,6 +2,7 @@
 
 #include <float.h>
 
+#include <algorithm>
 #include <cmath>
 #include <initializer_list>
 #include <iostream>
@@ -291,7 +292,7 @@ Vector<Dim> &operator/=(const Vector<Dim> &self, real value) {
 }
 
 template <size_t Dim>
-Vector<Dim> &operator*=(const Vector<Dim> &self, const Vector<Dim> &o) {
+Vector<Dim> &operator*=(Vector<Dim> &self, const Vector<Dim> &o) {
     for (size_t i = 0; i < Dim; i++) {
         self.data[i] *= o.data[i];
     }
@@ -684,6 +685,8 @@ inline Mat44 CreateTranslate(Vec3 &trans) {
     // clang-format on
 }
 
+inline Mat44 CreateTranslate(Vec3 &&trans) { return CreateTranslate(trans); }
+
 inline Mat44 CreateRotate(Vec3 &rotate) {
     real sinx = std::sin(rotate.x), cosx = std::cos(rotate.x),
          siny = std::sin(rotate.y), cosy = std::cos(rotate.y),
@@ -717,4 +720,69 @@ inline Mat44 CreateScale(Vec3 &scale) {
           0,       0,       0, 1
   };
     // clang-format on
+}
+
+inline Mat44 CreateScale(Vec3 &&scale) { return CreateScale(scale); }
+
+struct Rect {
+    Vec2 pos;
+    Vec2 size;
+};
+
+inline std::ostream &operator<<(std::ostream &o, const Rect &r) {
+    printf("Rect(%f, %f, %f, %f)", r.pos.x, r.pos.y, r.size.w, r.size.h);
+    return o;
+}
+
+inline real Radians(real degrees) { return degrees * M_PI / 180.0f; }
+
+inline real Degrees(real radians) { return radians * 180.0f / M_PI; }
+
+inline bool IsPointInRect(const Vec2 &p, const Rect &r) {
+    return p.x >= r.pos.x && p.x <= r.pos.x + r.size.w && p.y >= r.pos.y &&
+           p.y <= r.pos.y + r.size.h;
+}
+
+inline bool RectsIntersect(const Rect &r1, const Rect &r2, Rect *result) {
+    Rect rect;
+    rect.pos.x = std::max(r1.pos.x, r2.pos.x);
+    rect.pos.y = std::max(r1.pos.y, r2.pos.y);
+    rect.pos.w =
+        std::min(r1.pos.x + r1.size.w, r2.pos.x + r2.size.w) - rect.pos.x;
+    rect.pos.h =
+        std::min(r1.pos.y + r1.size.h, r2.pos.y + r2.size.h) - rect.pos.y;
+    if (rect.size.w > 0 && rect.size.h > 0) {
+        if (result) {
+            *result = rect;
+        }
+        return true;
+    }
+    return false;
+}
+
+inline Vec3 Barycentric(const Vec2 &v1, const Vec2 &v2, const Vec2 &v3,
+                        const Vec2 &p) {
+    Vec3 result;
+    Vec3 c1{v1.x - v2.x, v1.x - v3.x, p.x - v1.x},
+        c2{v1.y - v2.y, v1.y - v3.y, p.y - v1.y};
+    result = Cross(c1, c2);
+    if (result.z == 0) {
+        // (-1, -1, -1) means a invalid condition, should discard this point
+        return Vec3{-1, -1, -1};
+    }
+    return Vec3{1 - result.x / result.z - result.y / result.z,
+                result.x / result.z, result.y / result.z};
+}
+
+inline Rect GetTriangleAABB(const Vec2 &v1, const Vec2 &v2, const Vec2 &v3) {
+    // 需要include algorithm
+    int x1 = std::min({v1.x, v2.x, v3.x}), y1 = std::min({v1.y, v2.y, v3.y}),
+        x2 = std::max({v1.x, v2.x, v3.x}), y2 = std::max({v1.y, v2.y, v3.y});
+
+    return Rect{Vec2{real(x1), real(y1)}, Vec2{real(x2 - x1), real(y2 - y1)}};
+}
+
+template <typename T>
+inline int Sign(T value) {
+    return value > 0 ? 1 : (value == 0 ? 0 : -1);
 }

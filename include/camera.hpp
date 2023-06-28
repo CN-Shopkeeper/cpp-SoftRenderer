@@ -39,6 +39,7 @@ class Frustum {
 #endif
     }
 
+    // 视锥剔除
     bool Contain(Vec3& pt) {
         float half_h = near * std::tan(fov * 0.5) / aspect;
         float h_fovy_cos = std::cos(fov / 2);
@@ -56,16 +57,16 @@ class Frustum {
 
 class Camera {
    private:
-    Frustum frustum_;
     // eye
     Vec3 position_;
     Vec3 rotation_;
-    Vec3 view_dir_;
 
     // 重新计算view_mat_
     void RecalculateViewMat();
 
    public:
+    Frustum frustum_;
+    Vec3 view_dir_;
     // view matrix
     Mat44 view_mat_;
 

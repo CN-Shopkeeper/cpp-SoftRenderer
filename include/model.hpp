@@ -41,7 +41,7 @@ class Mesh {
 };
 
 std::optional<std::tuple<std::vector<Mesh>, std::vector<objloader::Mtllib>>>
-LoadFromFile(std::string& filename, PreOperation preOperation) {
+LoadFromFile(std::string&& filename, PreOperation preOperation) {
     std::vector<Mesh> meshes;
     auto sceneOpt = objloader::LoadFromFile(filename);
     if (sceneOpt.has_value()) {
