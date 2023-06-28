@@ -4,6 +4,7 @@
 
 #include "base_renderer.hpp"
 #include "cpu_renderer.hpp"
+#include "gpu_renderer.hpp"
 #include "image.hpp"
 #include "interactive.hpp"
 #include "model.hpp"
@@ -11,6 +12,10 @@
 #include "scanline.hpp"
 #include "shader.hpp"
 #include "texture.hpp"
+
+// #ifndef GPU_FEATURE_ENABLED
+// #define GPU_FEATURE_ENABLED
+// #endif
 
 const uint32_t WINDOW_WIDTH = 1024;
 const uint32_t WINDOW_HEIGHT = 720;
@@ -28,7 +33,7 @@ std::unique_ptr<IRenderer> CreateRenderer(uint32_t w, uint32_t h,
 #ifdef CPU_FEATURE_ENABLED
     return std::make_unique<CpuRenderer>(w, h, camera);
 #else
-// todo
+    return std::make_unique<GpuRenderer>(w, h, camera);
 #endif
 }
 
@@ -70,7 +75,7 @@ class RedBirdApp : public App {
     void OnInit() override {
         rotation_ = 0.0f;
         auto camera = Camera{1.0, 1000.0, 1.0f * WINDOW_WIDTH / WINDOW_HEIGHT,
-                             Radians(90.0f)};
+                             Radians(60.0f)};
         camera.MoveTo(Vec3{0.0, 1.0, 0.0});
         camera.SetRotation(Vec3{Radians(1.0f), 0.0, 0.0});
 
@@ -80,7 +85,7 @@ class RedBirdApp : public App {
         renderer_ = CreateRenderer(WINDOW_WIDTH, WINDOW_HEIGHT, camera);
         renderer_->SetFrontFace(FrontFace::CCW);
         renderer_->SetFaceCull(FaceCull::Back);
-        renderer_->EnableFramework();
+        // renderer_->EnableFramework();
         textureStorage_ = TextureStorage();
 
         // data prepare, from OBJ model
@@ -141,8 +146,7 @@ class RedBirdApp : public App {
         renderer_->ClearDepth();
 
         auto model = CreateTranslate(Vec3{0.0, 0.0, -4.0}) *
-                     CreateEularRotate_y(Radians(rotation_)) *
-                     CreateScale(Vec3{2.0, 2.0, 2.0});
+                     CreateEularRotate_y(Radians(rotation_));
         for (auto& data : vertexDatas_) {
             // set data into uniform
             auto& uniforms = renderer_->GetUniforms();

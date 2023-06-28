@@ -3,6 +3,7 @@
 #include <float.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <initializer_list>
 #include <iostream>
@@ -760,19 +761,38 @@ inline bool RectsIntersect(const Rect &r1, const Rect &r2, Rect *result) {
     return false;
 }
 
-inline Vec3 Barycentric(const Vec2 &v1, const Vec2 &v2, const Vec2 &v3,
-                        const Vec2 &p) {
-    Vec3 result;
-    Vec3 c1{v1.x - v2.x, v1.x - v3.x, p.x - v1.x},
-        c2{v1.y - v2.y, v1.y - v3.y, p.y - v1.y};
-    result = Cross(c1, c2);
-    if (result.z == 0) {
-        // (-1, -1, -1) means a invalid condition, should discard this point
-        return Vec3{-1, -1, -1};
+class Barycentric {
+   public:
+    real alpha;
+    real beta;
+    real gamma;
+    Barycentric(Vec2 &pt, std::array<Vec2, 3> &triangle) {
+        auto areaTwice =
+            Cross(triangle[1] - triangle[0], triangle[2] - triangle[0]);
+        alpha = std::abs(Cross(triangle[1] - pt, triangle[2] - pt) / areaTwice);
+        beta = std::abs(Cross(triangle[0] - pt, triangle[2] - pt) / areaTwice);
+        gamma = std::abs(Cross(triangle[0] - pt, triangle[1] - pt) / areaTwice);
     }
-    return Vec3{1 - result.x / result.z - result.y / result.z,
-                result.x / result.z, result.y / result.z};
-}
+
+    Barycentric(Vec2 &&pt, std::array<Vec2, 3> &&triangle)
+        : Barycentric(pt, triangle) {}
+
+    bool IsValid() { return alpha + beta + gamma <= 1.000001; }
+};
+
+// inline Vec3 Barycentric(const Vec2 &v1, const Vec2 &v2, const Vec2 &v3,
+//                         const Vec2 &p) {
+//     Vec3 result;
+//     Vec3 c1{v1.x - v2.x, v1.x - v3.x, p.x - v1.x},
+//         c2{v1.y - v2.y, v1.y - v3.y, p.y - v1.y};
+//     result = Cross(c1, c2);
+//     if (result.z == 0) {
+//         // (-1, -1, -1) means a invalid condition, should discard this point
+//         return Vec3{-1, -1, -1};
+//     }
+//     return Vec3{1 - result.x / result.z - result.y / result.z,
+//                 result.x / result.z, result.y / result.z};
+// }
 
 inline Rect GetTriangleAABB(const Vec2 &v1, const Vec2 &v2, const Vec2 &v3) {
     // 需要include algorithm

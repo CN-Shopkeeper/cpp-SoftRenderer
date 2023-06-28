@@ -1,9 +1,8 @@
 #pragma once
-#include <SDL.h>
-
 #include <iostream>
 #include <vector>
 
+#include "SDL.h"
 #include "math.hpp"
 
 template <typename T>

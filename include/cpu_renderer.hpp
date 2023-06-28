@@ -134,6 +134,7 @@ class CpuRenderer : public IRenderer {
             // project transform
             v.position = camera_.frustum_.mat * v.position;
             // save truely z
+            // frustum的矩阵中w=-z/near，需要还原回去
             v.position.z = -v.position.w * camera_.frustum_.near;
             // perspective divide
             v.position.x /= v.position.w;

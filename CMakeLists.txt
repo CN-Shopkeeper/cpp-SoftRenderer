@@ -9,7 +9,7 @@ project(
 )
 
 # cpu
-add_compile_definitions(CPU_FEATURE_ENABLED)
+add_compile_definitions(GPU_FEATURE_ENABLED)
 
 # fetch SDL under Windows
 # for Appveyor CI/CD
