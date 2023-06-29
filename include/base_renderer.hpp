@@ -24,9 +24,7 @@ enum FrontFace { CW, CCW };
 class IRenderer {
    public:
     virtual ~IRenderer() {}
-    static void Init() { IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG); }
 
-    static void Quit() { IMG_Quit(); }
     virtual void Clear(Vec4 &color) = 0;
     virtual void ClearDepth() = 0;
     virtual uint32_t GetCanvaWidth() = 0;
