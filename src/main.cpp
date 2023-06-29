@@ -37,6 +37,11 @@ std::unique_ptr<IRenderer> CreateRenderer(uint32_t w, uint32_t h,
 #endif
 }
 
+struct ModelFileInfo {
+    std::string path;
+    std::string name;
+};
+
 struct StructedModelData {
     std::vector<Vertex> vertices;
     std::optional<uint32_t> mtllib;
@@ -69,30 +74,19 @@ class RedBirdApp : public App {
     std::vector<objloader::Mtllib> mtllibs_;
     TextureStorage textureStorage_;
 
-   public:
-    RedBirdApp() : App("Red Bird APP!", WINDOW_WIDTH, WINDOW_HEIGHT) {}
+    std::vector<ModelFileInfo> fileInfos_;
 
-    void OnInit() override {
-        rotation_ = 0.0f;
-        auto camera = Camera{1.0, 1000.0, 1.0f * WINDOW_WIDTH / WINDOW_HEIGHT,
-                             Radians(60.0f)};
-        camera.MoveTo(Vec3{0.0, 1.0, 0.0});
-        camera.SetRotation(Vec3{Radians(1.0f), 0.0, 0.0});
-
-        // init renderer and textureStorage
-        // 开启SDL_IMAGE
-        renderer_->Init();
-        renderer_ = CreateRenderer(WINDOW_WIDTH, WINDOW_HEIGHT, camera);
-        renderer_->SetFrontFace(FrontFace::CCW);
-        renderer_->SetFaceCull(FaceCull::Back);
-        // renderer_->EnableFramework();
+    // data prepare, from OBJ model
+    void prepareData(ModelFileInfo& fileInfo) {
+        vertexDatas_ = std::vector<StructedModelData>();
+        mtllibs_ = std::vector<objloader::Mtllib>();
         textureStorage_ = TextureStorage();
-
-        // data prepare, from OBJ model
-        std::string MODEL_ROOT_DIR = "./resources/Son Goku";
-        auto modelResult = model::LoadFromFile(
-            std::filesystem::path{MODEL_ROOT_DIR}.append("Goku.obj").string(),
-            model::PreOperation::None);
+        std::string MODEL_ROOT_DIR = "./resources/" + fileInfo.path;
+        auto modelResult =
+            model::LoadFromFile(std::filesystem::path{MODEL_ROOT_DIR}
+                                    .append(fileInfo.name)
+                                    .string(),
+                                model::PreOperation::None);
         if (!modelResult.has_value()) {
             SDL_Log("load model from %s failed!", MODEL_ROOT_DIR.c_str());
             return;
@@ -112,6 +106,31 @@ class RedBirdApp : public App {
                 };
             }
         }
+    }
+
+   public:
+    RedBirdApp() : App("Soft Renderer APP! ", WINDOW_WIDTH, WINDOW_HEIGHT) {
+        fileInfos_.push_back({"Red", "Red.obj"});
+        fileInfos_.push_back({"Son Goku", "Goku.obj"});
+        fileInfos_.push_back({"cube", "cube.obj"});
+        fileInfos_.push_back({"plane", "plane.obj"});
+    }
+
+    void OnInit() override {
+        rotation_ = 0.0f;
+        auto camera = Camera{1.0, 1000.0, 1.0f * WINDOW_WIDTH / WINDOW_HEIGHT,
+                             Radians(60.0f)};
+        camera.MoveTo(Vec3{0.0, 1.0, 0.0});
+        camera.SetRotation(Vec3{Radians(1.0f), 0.0, 0.0});
+
+        // init renderer and textureStorage
+        renderer_ = CreateRenderer(WINDOW_WIDTH, WINDOW_HEIGHT, camera);
+        renderer_->SetFrontFace(FrontFace::CCW);
+        renderer_->SetFaceCull(FaceCull::Back);
+        // renderer_->EnableFramework();
+        textureStorage_ = TextureStorage();
+
+        prepareData(fileInfos_[0]);
 
         // vertex changing shader
         renderer_->GetShader().vertexChanging =
@@ -179,7 +198,15 @@ class RedBirdApp : public App {
         }
 
         rotation_ += 1.0f;
-        SwapBuffer(renderer_->GetSurface());
+        SwapBuffer(renderer_->GetSurface(),
+                   "w/a/s/d: (摄像机)前进/左移/后退/右移\n"
+                   "q/e: (摄像机)上升/下降\n"
+                   "t: 切换视图模式\n\n"
+                   "模型切换:\n"
+                   "1 -> Red Bird\n"
+                   "2 -> Son Goku\n"
+                   "3 -> White Cube\n"
+                   "4 -> Reckless Shopkeeper!\n");
     }
 
     void OnKeyDown(const SDL_KeyboardEvent& e) override {
@@ -204,6 +231,18 @@ class RedBirdApp : public App {
         }
         if (SDLK_t == e.keysym.sym) {
             renderer_->ToggleFramework();
+        }
+        if (SDLK_1 == e.keysym.sym) {
+            prepareData(fileInfos_[0]);
+        }
+        if (SDLK_2 == e.keysym.sym) {
+            prepareData(fileInfos_[1]);
+        }
+        if (SDLK_3 == e.keysym.sym) {
+            prepareData(fileInfos_[2]);
+        }
+        if (SDLK_4 == e.keysym.sym) {
+            prepareData(fileInfos_[3]);
         }
     }
 };
