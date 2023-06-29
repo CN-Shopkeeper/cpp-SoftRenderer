@@ -70,6 +70,10 @@ class GpuRenderer : public IRenderer {
             aabbMaxX = std::max(aabbMaxX, v.position.x);
             aabbMaxY = std::max(aabbMaxY, v.position.y);
         }
+        aabbMinX = std::max(aabbMinX, 0.0f);
+        aabbMinY = std::max(aabbMinY, 0.0f);
+        aabbMaxX = std::min(aabbMaxX, colorAttachment_.width - 1.0f);
+        aabbMaxY = std::min(aabbMaxY, colorAttachment_.height - 1.0f);
         Vec2 aabbMax = Vec2{aabbMaxX, aabbMaxY};
         Vec2 aabbMin = Vec2{aabbMinX, aabbMinY};
         if (enableFramework_) {
