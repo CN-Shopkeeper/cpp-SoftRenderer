@@ -55,3 +55,7 @@ add_compile_definitions(GPU_FEATURE_ENABLED)
 # cpu
 # add_compile_definitions(CPU_FEATURE_ENABLED)
 ```
+
+## 效果展示
+
+![snapshot](./snapshot/snapshot.gif)
