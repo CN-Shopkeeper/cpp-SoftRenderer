@@ -1,6 +1,6 @@
 function(FetchSDL_MSVC)
     include(FetchContent)
-    
+
     message(STATUS "fetching SDL2 ...")
     FetchContent_Declare(
         SDL2
@@ -13,15 +13,22 @@ function(FetchSDL_MSVC)
         URL https://github.com/libsdl-org/SDL_image/releases/download/release-2.6.2/SDL2_image-devel-2.6.2-VC.zip
     )
 
-    FetchContent_MakeAvailable(SDL2 SDL2_image)
+    message(STATUS "fetching SDL2_ttf ...")
+    FetchContent_Declare(
+        SDL2_ttf
+        URL https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.20.1/SDL2_ttf-devel-2.20.1-VC.zip
+    )
+
+    FetchContent_MakeAvailable(SDL2 SDL2_image SDL2_ttf)
 
     set(SDL2_ROOT ${sdl2_SOURCE_DIR} CACHE PATH "SDL2 root directory")
     set(SDL2_IMAGE_ROOT ${sdl2_image_SOURCE_DIR} CACHE PATH "SDL2_image root directory")
+    set(SDL2_TTF_ROOT ${sdl2_ttf_SOURCE_DIR} CACHE PATH "SDL2_ttf root directory")
 endfunction(FetchSDL_MSVC)
 
 function(FetchSDL_MINGW)
     include(FetchContent)
-    
+
     message(STATUS "fetching SDL2 ...")
     FetchContent_Declare(
         SDL2
@@ -34,20 +41,27 @@ function(FetchSDL_MINGW)
         URL https://github.com/libsdl-org/SDL_image/releases/download/release-2.6.2/SDL2_image-devel-2.6.2-mingw.zip
     )
 
-    FetchContent_MakeAvailable(SDL2 SDL2_image)
+    message(STATUS "fetching SDL2_ttf ...")
+    FetchContent_Declare(
+        SDL2_ttf
+        URL https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.20.1/SDL2_ttf-devel-2.20.1-mingw.zip
+    )
+
+    FetchContent_MakeAvailable(SDL2 SDL2_image SDL2_ttf)
 
     set(SDL2_ROOT ${sdl2_SOURCE_DIR} CACHE PATH "SDL2 root directory")
     set(SDL2_IMAGE_ROOT ${sdl2_image_SOURCE_DIR} CACHE PATH "SDL2_image root directory")
+    set(SDL2_TTF_ROOT ${sdl2_ttf_SOURCE_DIR} CACHE PATH "SDL2_ttf root directory")
 endfunction(FetchSDL_MINGW)
 
 function(FetchSDL)
-    if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR
+    if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR
         (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND
-         CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")) # use MSVC
+        CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")) # use MSVC
         FetchSDL_MSVC()
-    elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR
-            (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND
-             CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "GNU")) # use MINGW
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR
+        (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND
+        CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "GNU")) # use MINGW
         FetchSDL_MINGW()
     endif()
 endfunction()
